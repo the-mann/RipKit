@@ -5,7 +5,8 @@ const csv = require('csv-parser')
 const { Readable } = require('stream')
 const yts = require('yt-search')
 const archiver = require('archiver')
-const youtubedl = require('youtube-dl-exec')
+const ytdlFactory = require('youtube-dl-exec')
+const youtubedl = process.env.RIPKIT_YTDLP ? ytdlFactory.create(process.env.RIPKIT_YTDLP) : ytdlFactory
 const { spawn, execFileSync } = require('child_process')
 const path = require('path')
 
@@ -13,7 +14,7 @@ const app = express()
 const upload = multer({ dest: 'uploads/' })
 
 // serve the built React app (npm run build)
-app.use(express.static('dist'))
+app.use(express.static(path.join(__dirname, 'dist')))
 app.use(express.json({ limit: '1mb' }))
 
 // The one rip, running or most recently finished. Single-user app, so one is
@@ -1186,7 +1187,7 @@ if (require.main === module) {
     }
   }
   const port = Number(process.env.PORT) || 3000
-  app.listen(port, () => console.log(`Server running at http://localhost:${port}`))
+  app.listen(port, process.env.HOST || '127.0.0.1', () => console.log(`Server running at http://localhost:${port}`))
 }
 
 module.exports = {

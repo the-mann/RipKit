@@ -3,6 +3,7 @@ services:
     build: .
     restart: unless-stopped
     environment:
+      HOST: 0.0.0.0
       ALLOW_SERVER_DOWNLOADS: "false"
       TEMP_FILE_TTL_MS: "1800000"
       DOWNLOAD_DIR: /data/downloads

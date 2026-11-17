@@ -7,3 +7,5 @@ mp3s_*/
 test_tmp/
 .DS_Store
 .claude/
+desktop/tools/
+release/

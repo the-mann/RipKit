@@ -1,0 +1,23 @@
+appId: dev.marcusmann.ripkit
+productName: RipKit
+extraMetadata:
+  main: desktop/main.cjs
+asar: false
+files:
+  - dist/**/*
+  - server.js
+  - desktop/main.cjs
+  - package.json
+extraResources:
+  - from: desktop/tools
+    to: tools
+directories:
+  output: release
+mac:
+  target: [dmg, zip]
+  category: public.app-category.music
+win:
+  target: [nsis]
+nsis:
+  oneClick: true
+  perMachine: false
