@@ -6,7 +6,10 @@ const { Readable } = require('stream')
 const yts = require('yt-search')
 const archiver = require('archiver')
 const ytdlFactory = require('youtube-dl-exec')
-const youtubedl = process.env.RIPKIT_YTDLP ? ytdlFactory.create(process.env.RIPKIT_YTDLP) : ytdlFactory
+const ytdlInstance = process.env.RIPKIT_YTDLP ? ytdlFactory.create(process.env.RIPKIT_YTDLP) : ytdlFactory
+const runtimeOptions = () => process.env.RIPKIT_NODE ? { noJsRuntimes: true, jsRuntimes: `node:${process.env.RIPKIT_NODE}` } : {}
+const youtubedl = (url, options) => ytdlInstance(url, { ...runtimeOptions(), ...options })
+youtubedl.exec = (url, options) => ytdlInstance.exec(url, { ...runtimeOptions(), ...options })
 const { spawn, execFileSync } = require('child_process')
 const path = require('path')
 
@@ -1084,7 +1087,16 @@ async function runRip (job, songs) {
         track.percent = Math.round(pct * 0.9)
       })
       job.child = sub // so /cancel can kill it mid-download
-      await sub
+      try {
+        await sub
+      } catch (err) {
+        if (!job.cancelled && /403|Forbidden/i.test(String(err.stderr || err.message))) {
+          track.detail = 'refreshing YouTube download link'
+          const retry = downloadAudio(video.url, outputTemplate, userQuality, format, (pct) => { track.percent = Math.round(pct * 0.9) })
+          job.child = retry
+          await retry
+        } else throw err
+      }
       job.child = null
 
       const audioPath = findDownloaded(tempFolder, fileBase)

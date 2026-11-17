@@ -13,6 +13,7 @@ app.whenReady().then(async () => {
   process.chdir(path.join(data, 'work'))
   process.env.PATH = tools + path.delimiter + process.env.PATH
   process.env.RIPKIT_YTDLP = path.join(tools, 'yt-dlp' + ext)
+  process.env.RIPKIT_NODE = path.join(tools, 'node' + ext)
   process.env.ALLOW_SERVER_DOWNLOADS = 'true'
   process.env.DOWNLOAD_DIR = path.join(app.getPath('downloads'), 'RipKit')
   process.env.STAGE_DIR = path.join(data, 'staging')
