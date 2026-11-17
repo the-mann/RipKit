@@ -4,7 +4,7 @@ WORKDIR /app
 
 # yt-dlp uses ffmpeg to extract audio and to embed metadata/artwork.
 RUN apt-get update \
-  && apt-get install -y --no-install-recommends ffmpeg ca-certificates \
+  && apt-get install -y --no-install-recommends ffmpeg python3 ca-certificates \
   && rm -rf /var/lib/apt/lists/*
 
 COPY package.json package-lock.json ./
