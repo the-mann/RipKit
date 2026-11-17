@@ -34,12 +34,12 @@ export default function ExportWalkthrough () {
       </div>
       <figcaption>
         <span aria-live='polite'>{step + 1} / 4 · {captions[step]}</span>
-        <button type='button' onClick={() => setPlaying(!playing)}>{playing ? 'Pause' : 'Continue'}</button>
+        <button type='button' onClick={() => step === 3 && !playing ? start() : setPlaying(!playing)}>{playing ? 'Pause' : step === 3 ? 'Replay' : 'Play'}</button>
       </figcaption>
       <div className='export-demo__steps' aria-label='Walkthrough steps'>
         {captions.map((caption, index) => <button type='button' key={caption} aria-label={caption} aria-pressed={step === index} onClick={() => { setStep(index); setPlaying(false) }}>{index + 1}</button>)}
       </div>
-      <small>Illustrated walkthrough using your Rekordbox screenshot. Menu overlays show the export commands; this is not a screen recording.</small>
+      <small>Illustrated guide · Menus are demonstrated over a Rekordbox screenshot.</small>
     </figure>
   )
 }

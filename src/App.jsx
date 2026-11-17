@@ -603,18 +603,24 @@ export default function App () {
 
       {!loaded && (
         <section className='deck'>
-          <h1>Start with your Rekordbox playlist.</h1>
+          <h1>Bring your playlist.</h1>
           <p>
-            Export your track list as a TXT file, then drop it below. RipKit uses
-            the titles and artists to find audio on YouTube and add tags and artwork.
+            Import a Rekordbox TXT or playlist CSV, or paste a YouTube link.
+            Get audio files with tags and artwork.
           </p>
-          <ol className='export-guide'>
-            <li>In Rekordbox, find your playlist in the left sidebar and right-click its name.</li>
-            <li>Choose <strong>Export a playlist to a file</strong>, then <strong>Export a playlist to a file (*.txt)</strong>.</li>
-            <li>Save the TXT file somewhere easy to find, then drag it into RipKit below.</li>
-          </ol>
-          <p className='export-note'>You can also select the playlist and use the Playlist menu at the top. Choose TXT, rather than M3U8 or USB export. This exports a track list; it does not transfer cue points or audio. Playlist CSV files work too.</p>
-          <ExportWalkthrough />
+          <details className='how-to'>
+            <summary><span className='how-to__icon'>?</span><span>How to use RipKit<small>Export a playlist from Rekordbox</small></span><span className='how-to__chevron'>⌄</span></summary>
+            <div className='how-to__body'>
+              <div className='how-to__heading'><span className='how-to__eyebrow'>REKORDBOX → RIPKIT</span><h2>Your playlist, in three steps</h2><p>You only need the track list. Keep Rekordbox’s export settings as they are.</p></div>
+              <ol className='export-guide'>
+                <li><strong>Find your playlist</strong><span>In Rekordbox’s left sidebar, right-click the playlist name.</span></li>
+                <li><strong>Export as TXT</strong><span>Choose “Export a playlist to a file” → “Export a playlist to a file (*.txt)”.</span></li>
+                <li><strong>Drop it here</strong><span>Save the file, then drag it into the import area below.</span></li>
+              </ol>
+              <ExportWalkthrough />
+              <p className='how-to__tip'><strong>Good to know</strong> You can also use Rekordbox’s Playlist menu. Choose TXT, rather than M3U8 or USB export. The file contains track information, not cue points or audio.</p>
+            </div>
+          </details>
         </section>
       )}
 
