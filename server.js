@@ -780,7 +780,7 @@ app.post('/youtube', async (req, res) => {
     const url = new URL(String(req.body.sourceUrl || '').trim())
     if (!['https:', 'http:'].includes(url.protocol) || !['youtube.com', 'www.youtube.com', 'music.youtube.com', 'm.youtube.com', 'youtu.be'].includes(url.hostname)) throw new Error()
     const list = url.searchParams.get('list')
-    source = list && /^[\w-]+$/.test(list)
+    source = url.pathname === '/playlist' && list && /^[\w-]+$/.test(list)
       ? `https://www.youtube.com/playlist?list=${list}` : youtubeUrl(url.toString())
     if (!source) throw new Error()
   } catch { return res.status(400).json({ error: 'Paste a YouTube video or playlist link.' }) }

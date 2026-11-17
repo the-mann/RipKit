@@ -256,7 +256,14 @@ export default function App () {
         method: 'POST', headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ sourceUrl: singleUrl, format, quality })
       })
-      const data = await res.json()
+      if (res.status === 401 || res.status === 403 || res.redirected) {
+        throw new Error('Your Cloudflare login needs refreshing. Reload this page, sign in again, and retry.')
+      }
+      const responseText = await res.text()
+      let data
+      try { data = JSON.parse(responseText) } catch {
+        throw new Error('The access gateway returned an unexpected response. Reload this page and sign in again.')
+      }
       if (!res.ok) throw new Error(data.error || 'Could not start download.')
       window.location.reload()
     } catch (err) { setSingleError(err.message) } finally { setSingleStarting(false) }
@@ -626,7 +633,7 @@ export default function App () {
 
       <section className='single-download' aria-label='YouTube download'>
         <h2>Download from YouTube</h2>
-        <p>Paste a video or playlist link. Get a ZIP of tagged audio with artwork. Up to 100 videos per import; temporary files expire after 30 minutes.</p>
+        <p>Paste a video or public playlist link. Watch links download just that video; use a /playlist link for a full playlist. Get a ZIP with tags and artwork. Up to 100 videos per import; files expire after 30 minutes.</p>
         <form onSubmit={(event) => { event.preventDefault(); downloadSingle() }}>
           <label htmlFor='single-url'>YouTube video or playlist link</label>
           <input id='single-url' type='url' required placeholder='https://youtu.be/…'
