@@ -602,12 +602,17 @@ export default function App () {
 
       {!loaded && (
         <section className='deck'>
-          <h1>Your playlist, as files you keep.</h1>
+          <h1>Start with your Rekordbox playlist.</h1>
           <p>
-            Drop a playlist export. Every track gets found, pulled, tagged with its
-            album art, and handed back as a ZIP any player reads — including the one
-            in your drawer.
+            Export your track list as a TXT file, then drop it below. RipKit uses
+            the titles and artists to find audio on YouTube and add tags and artwork.
           </p>
+          <ol className='export-guide'>
+            <li>In Rekordbox, find your playlist in the left sidebar and right-click its name.</li>
+            <li>Choose <strong>Export a playlist to a file</strong>, then <strong>Export a playlist to a file (*.txt)</strong>.</li>
+            <li>Save the TXT file somewhere easy to find, then drag it into RipKit below.</li>
+          </ol>
+          <p className='export-note'>You can also select the playlist and use the Playlist menu at the top. Choose TXT, rather than M3U8 or USB export. This exports a track list; it does not transfer cue points or audio. Playlist CSV files work too.</p>
         </section>
       )}
 

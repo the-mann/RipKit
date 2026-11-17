@@ -625,3 +625,12 @@ footer {
 .single-download input { flex: 1; min-width: 180px; padding: 10px; color: inherit; background: rgb(255 255 255 / 0.05); border: 1px solid rgb(255 255 255 / 0.25); border-radius: 4px; }
 .single-download button { padding: 10px 16px; }
 .single-download button:disabled { opacity: 0.5; cursor: default; }
+.export-guide {
+  max-width: 48rem;
+  margin: 1.5rem 0 1rem;
+  padding-left: 1.4rem;
+  line-height: 1.65;
+  text-align: left;
+}
+.export-guide li { padding-left: .35rem; margin-bottom: .65rem; }
+.export-note { max-width: 48rem; font-size: .85rem; line-height: 1.6; opacity: .75; }
