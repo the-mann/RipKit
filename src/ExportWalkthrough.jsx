@@ -24,12 +24,25 @@ export default function ExportWalkthrough () {
       <div className={`export-demo__screen step-${step}`}>
         <img src='/guide/rekordbox.png' alt='Rekordbox with a playlist selected in the left sidebar' />
         <div className='export-demo__focus' />
-        <div className='export-demo__cursor' aria-hidden='true'>➤</div>
-        {step >= 1 && <div className='export-demo__menu' aria-hidden='true'>
-          <div>Export a playlist to a file <span>▸</span></div>
-          {step >= 2 && <div className='export-demo__submenu'>Export a playlist to a file (*.txt)</div>}
+        <svg className='export-demo__cursor' viewBox='0 0 24 32' aria-hidden='true'><path d='M2 2v23l6-6 5 11 4-2-5-10h9Z' fill='white' stroke='#111' strokeWidth='1.7' strokeLinejoin='round'/></svg>
+        {step >= 1 && step < 3 && <div className='export-demo__menu' aria-hidden='true'>
+          <div className='rb-menu-row rb-menu-muted'>Export Playlist <span>▶</span></div>
+          <div className='rb-menu-row rb-menu-muted'>Import Playlist</div>
+          <div className='rb-menu-rule' />
+          <div className='rb-menu-row'>Create New Playlist</div>
+          <div className='rb-menu-row'>Create New Intelligent Playlist</div>
+          <div className='rb-menu-row'>Create New Folder</div>
+          <div className='rb-menu-row'>Delete Playlist</div>
+          <div className='rb-menu-rule' />
+          <div className='rb-menu-row'>Renumber Track Order</div>
+          <div className='rb-menu-row rb-menu-selected'>Export a playlist to a file <span>▶</span>
+            {step >= 2 && <div className='export-demo__submenu'>
+              <div className='rb-menu-row rb-menu-selected'>Export a playlist to a file (*.txt)</div>
+              <div className='rb-menu-row'>Export a playlist to a file for music apps (*.m3u8)</div>
+            </div>}
+          </div>
         </div>}
-        {step === 3 && <div className='export-demo__file' aria-hidden='true'>▤ playlist.txt <span>↓ Drop into RipKit</span></div>}
+        {step === 3 && <div className='export-demo__file' aria-hidden='true'><div className='rb-save-title'>Export a playlist to a file</div><label>Save As: <span>playlist.txt</span></label><div className='rb-save-footer'><span>TXT playlist</span><b>Save</b></div></div>}
         {!playing && <button type='button' className='export-demo__play' onClick={start} aria-label='Play Rekordbox TXT export walkthrough'>▶ <span>{step === 3 ? 'Replay guide' : 'Watch how to export'}</span></button>}
       </div>
       <figcaption>
