@@ -1,0 +1,10 @@
+node_modules
+dist
+downloads
+output
+.staging
+uploads
+.git
+.github
+test_tmp
+*.log

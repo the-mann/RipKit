@@ -8,7 +8,7 @@ Tired of streaming algorithms deciding what you should listen to? Tired of losin
 
 ## What it does
 
-- Takes a **playlist CSV** (Spotify, Apple Music, YouTube Music, custom, etc.)
+- Takes a **playlist CSV** (Spotify, Apple Music, YouTube Music, custom, etc.) or a **Rekordbox TXT** playlist export (UTF-16 tab-separated text)
 - For each row, it:
   - Reads **title**, **artist**, **album**, **year**, **genre** (from many possible column names)
   - Searches the track on **YouTube**
@@ -17,7 +17,7 @@ Tired of streaming algorithms deciding what you should listen to? Tired of losin
   - Writes tags and embeds the cover with `ffmpeg`
 - Zips everything into `songs.zip` for you to download from the browser
 
-Drop a CSV and the page renders your tracklist immediately, cover art and all. Once a rip starts, the track being worked on gets promoted to its own panel — full-size album art with yt-dlp's real download percentage running across it. Finished tracks stack up underneath, newest first, each showing the codec and bitrate it actually got or the reason it failed. Long playlists load 25 rows at a time.
+Drop a CSV or Rekordbox TXT and the page renders your tracklist immediately, cover art and all. Once a rip starts, the track being worked on gets promoted to its own panel — full-size album art with yt-dlp's real download percentage running across it. Finished tracks stack up underneath, newest first, each showing the codec and bitrate it actually got or the reason it failed. Long playlists load 25 rows at a time.
 
 You can stop a rip at any point. The running download is killed, the interrupted track is marked **Stopped**, and you still get a ZIP of everything that finished — stopping is never a total loss.
 
@@ -170,3 +170,19 @@ This tool is intended only for personal, local use.
 
 - Do not use this project to infringe copyright, redistribute music, or share copyrighted material without permission.
 - You are solely responsible for how you use this code and for complying with your local laws and the terms of service of any platforms you access.
+
+## Choose a YouTube version
+
+Paste a video URL into a track’s **YouTube version** field before starting a rip to bypass automatic search. After a rip, paste a link and choose **Replace audio** or **Retry with link** for a failed/unmatched track. Only that track is downloaded; playlist metadata stays the same. Failed replacements keep existing audio. Single-track retries require the original output folder to still exist; ZIP-on-server jobs remove that staging folder, so load the playlist again for those jobs.
+
+## One-off downloads
+
+Use **Download a single track** to paste a YouTube video link without a playlist. Files save to `downloads/Catch All` (under `DOWNLOAD_DIR` when configured), using the selected format and bitrate. Video metadata supplies the tags; filenames include the video ID. Repeated downloads keep both files. One-off progress is independent of the current playlist.
+
+## Bandcamp → YouTube
+
+Use **Find on YouTube** with either a `.../track/...` or `.../album/...` URL. RipKit reads Bandcamp only for title, artist, album, artwork, and tags; it never downloads Bandcamp audio. For every track it searches YouTube and accepts only a reported audio stream above 128 kbps. Tracks without an eligible YouTube stream are skipped. Accepted tracks are tagged and written as 320 kbps MP3s below `downloads/Catch All/Bandcamp`, organized by artist and album.
+
+## Preview downloads
+
+Completed tracks have local **Play/Pause** and seek controls in the track list, so you can audition the exact file before keeping it. The player only serves the recorded local output file for that track. Preview is available while the downloaded files remain on disk; save-to-folder jobs work directly, while ZIP-only jobs need to be saved or extracted first.

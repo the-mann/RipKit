@@ -73,7 +73,46 @@ function NowRipping ({ track, position, total }) {
   )
 }
 
-function Track ({ track, index, order }) {
+function formatTime (seconds) {
+  if (!Number.isFinite(seconds)) return '0:00'
+  const minutes = Math.floor(seconds / 60)
+  return `${minutes}:${String(Math.floor(seconds % 60)).padStart(2, '0')}`
+}
+
+function AudioPreview ({ src, label }) {
+  const audio = useRef(null)
+  const [playing, setPlaying] = useState(false)
+  const [position, setPosition] = useState(0)
+  const [duration, setDuration] = useState(0)
+
+  const toggle = async () => {
+    if (!audio.current) return
+    if (audio.current.paused) await audio.current.play()
+    else audio.current.pause()
+  }
+
+  return (
+    <div className='preview' aria-label={`Preview ${label}`}>
+      <audio ref={audio} src={src} preload='metadata'
+        onLoadedMetadata={(event) => setDuration(event.currentTarget.duration)}
+        onTimeUpdate={(event) => setPosition(event.currentTarget.currentTime)}
+        onPlay={() => setPlaying(true)} onPause={() => setPlaying(false)} onEnded={() => setPlaying(false)} />
+      <button type='button' className='preview__toggle' onClick={toggle} aria-label={playing ? `Pause ${label}` : `Play ${label}`}>
+        {playing ? 'Pause' : 'Play'}
+      </button>
+      <span className='preview__time'>{formatTime(position)}</span>
+      <input className='preview__seek' type='range' min='0' max={duration || 0} step='0.1' value={Math.min(position, duration || 0)}
+        aria-label={`Seek ${label}`} onChange={(event) => {
+          const next = Number(event.target.value)
+          if (audio.current) audio.current.currentTime = next
+          setPosition(next)
+        }} />
+      <span className='preview__time'>{formatTime(duration)}</span>
+    </div>
+  )
+}
+
+function Track ({ track, index, order, onSource, onRetry, busy }) {
   const { title, artist, album, year, art, status, detail } = track
   const meta = [album, year].filter(Boolean).join(' · ')
 
@@ -88,6 +127,22 @@ function Track ({ track, index, order }) {
       <div className='track__names'>
         <span className='track__title'>{title || 'Unreadable row'}</span>
         <span className='track__artist'>{artist || '—'}</span>
+        {onSource && title && artist && (
+          <div className='track__source'>
+            <label>
+              YouTube version
+              <input type='url' aria-label={`YouTube link for ${title}`}
+                placeholder='Paste a YouTube link (optional)'
+                value={track.overrideUrl ?? ''} disabled={busy}
+                onChange={(event) => onSource(index, event.target.value)} />
+            </label>
+            {track.sourceUrl && <a href={track.sourceUrl} target='_blank' rel='noreferrer'>Current source ↗</a>}
+            {onRetry && <button type='button' disabled={busy || !track.overrideUrl?.trim()}
+              onClick={() => onRetry(index, track.overrideUrl)}>
+              {status === 'done' ? 'Replace audio' : 'Retry with link'}
+            </button>}
+          </div>
+        )}
       </div>
 
       <div className='track__meta'>
@@ -96,6 +151,8 @@ function Track ({ track, index, order }) {
           : <span className='track__album'>{meta}</span>}
       </div>
 
+      {status === 'done' && track.audioFile && <AudioPreview src={`/tracks/${index}/audio`} label={title} />}
+
       <span className='track__status' title={status}>
         {STATUS_MARK[status] || '·'}
       </span>
@@ -103,7 +160,7 @@ function Track ({ track, index, order }) {
   )
 }
 
-function Stack ({ items, shown, onMore, label, count }) {
+function Stack ({ items, shown, onMore, label, count, onSource, onRetry, busy }) {
   const remaining = items.length - shown
   return (
     <>
@@ -114,7 +171,7 @@ function Stack ({ items, shown, onMore, label, count }) {
       )}
       <ol className='tracklist'>
         {items.slice(0, shown).map(({ track, index }, order) => (
-          <Track key={index} track={track} index={index} order={order} />
+          <Track key={index} track={track} index={index} order={order} onSource={onSource} onRetry={onRetry} busy={busy} />
         ))}
       </ol>
       {remaining > 0 && (
@@ -165,6 +222,58 @@ function Outcome ({ result, stopped, zipName }) {
 }
 
 export default function App () {
+  const [singleUrl, setSingleUrl] = useState('')
+  const [single, setSingle] = useState(null)
+  const [singleFolder, setSingleFolder] = useState('')
+  const [singleStarting, setSingleStarting] = useState(false)
+  const [singleError, setSingleError] = useState('')
+  const [bandcampUrl, setBandcampUrl] = useState('')
+  const [bandcamp, setBandcamp] = useState(null)
+  const [bandcampFolder, setBandcampFolder] = useState('')
+  const [bandcampStarting, setBandcampStarting] = useState(false)
+  const [bandcampError, setBandcampError] = useState('')
+  useEffect(() => {
+    let alive = true
+    const poll = async () => {
+      try {
+        const [singleRes, bandcampRes] = await Promise.all([fetch('/single'), fetch('/bandcamp')])
+        const [singleData, bandcampData] = await Promise.all([singleRes.json(), bandcampRes.json()])
+        if (alive) {
+          setSingle(singleData.download); setSingleFolder(singleData.folder)
+          setBandcamp(bandcampData.download); setBandcampFolder(bandcampData.folder)
+        }
+      } catch { /* try again next tick */ }
+    }
+    poll()
+    const timer = setInterval(poll, 1000)
+    return () => { alive = false; clearInterval(timer) }
+  }, [])
+  const downloadSingle = async () => {
+    setSingleStarting(true)
+    setSingleError('')
+    try {
+      const res = await fetch('/single', {
+        method: 'POST', headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ sourceUrl: singleUrl, format, quality })
+      })
+      const data = await res.json()
+      if (!res.ok) throw new Error(data.error || 'Could not start download.')
+      setSingle(data.download)
+    } catch (err) { setSingleError(err.message) } finally { setSingleStarting(false) }
+  }
+  const downloadBandcamp = async () => {
+    setBandcampStarting(true)
+    setBandcampError('')
+    try {
+      const res = await fetch('/bandcamp', {
+        method: 'POST', headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ sourceUrl: bandcampUrl })
+      })
+      const data = await res.json()
+      if (!res.ok) throw new Error(data.error || 'Could not start Bandcamp download.')
+      setBandcamp(data.download)
+    } catch (err) { setBandcampError(err.message) } finally { setBandcampStarting(false) }
+  }
   const [file, setFile] = useState(null)
   const [tracks, setTracks] = useState([])
   const [quality, setQuality] = useState('0')
@@ -179,6 +288,7 @@ export default function App () {
   const [folder, setFolder] = useState('')
   const [root, setRoot] = useState('')
   const [zipRoot, setZipRoot] = useState('')
+  const [allowServerDownloads, setAllowServerDownloads] = useState(false)
   const [sep, setSep] = useState('/')
   const [error, setError] = useState('')
   const [shownDone, setShownDone] = useState(PAGE)
@@ -244,7 +354,7 @@ export default function App () {
   useEffect(() => {
     fetch('/destination')
       .then((r) => r.json())
-      .then((d) => { setRoot(d.root); setZipRoot(d.zipRoot); setSep(d.separator) })
+      .then((d) => { setRoot(d.root); setZipRoot(d.zipRoot); setSep(d.separator); setAllowServerDownloads(Boolean(d.allowServerDownloads)) })
       .catch(() => {})
 
     fetch('/job')
@@ -338,15 +448,15 @@ export default function App () {
 
   const pick = async (f) => {
     if (!f) return
-    if (!f.name.toLowerCase().endsWith('.csv')) {
-      setError(`${f.name} is not a CSV. Export your playlist as CSV and try again.`)
+    if (!/\.(csv|txt)$/i.test(f.name)) {
+      setError(`${f.name} is not a CSV or TXT file. Choose a playlist CSV or Rekordbox TXT export.`)
       return
     }
 
     setError('')
     setFile(f)
     setJob(null) // a new CSV means the last rip's result banner is stale
-    setFolder((prev) => prev || f.name.replace(/\.csv$/i, ''))
+    setFolder((prev) => prev || f.name.replace(/\.(csv|txt)$/i, ''))
     setTracks([])
     setShownDone(PAGE)
     setShownQueue(PAGE)
@@ -358,8 +468,8 @@ export default function App () {
       body.append('csv', f)
       const res = await fetch('/preview', { method: 'POST', body })
       const data = await res.json()
-      if (!res.ok) throw new Error(data.error || 'Could not read that CSV.')
-      if (!data.tracks.length) throw new Error('That CSV has no rows.')
+      if (!res.ok) throw new Error(data.error || 'Could not read that playlist.')
+      if (!data.tracks.length) throw new Error('That playlist has no tracks.')
       setTracks(data.tracks)
     } catch (err) {
       setError(err.message)
@@ -385,6 +495,7 @@ export default function App () {
 
     const body = new FormData()
     body.append('csv', file)
+    body.append('overrides', JSON.stringify(Object.fromEntries(tracks.flatMap((t, i) => t.overrideUrl?.trim() ? [[i, t.overrideUrl.trim()]] : []))))
     body.append('quality', quality)
     body.append('format', format)
     body.append('deliver', deliver)
@@ -401,6 +512,25 @@ export default function App () {
     } finally {
       setStarting(false)
     }
+  }
+
+  const setSource = (index, value) => {
+    setTracks((prev) => prev.map((track, i) => i === index ? { ...track, overrideUrl: value } : track))
+  }
+
+  const retryTrack = async (index, sourceUrl) => {
+    setStarting(true)
+    setError('')
+    try {
+      const res = await fetch(`/tracks/${index}/retry`, {
+        method: 'POST', headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ sourceUrl })
+      })
+      const data = await res.json()
+      if (!res.ok) throw new Error(data.error || 'Could not retry this track.')
+      setJob(data.job)
+      setTracks((prev) => prev.map((t, i) => i === index ? { ...t, status: 'queued', detail: '', percent: 0 } : t))
+    } catch (err) { setError(err.message) } finally { setStarting(false) }
   }
 
   // Stop the rip. The server kills the running download and still packages
@@ -482,17 +612,54 @@ export default function App () {
         <input
           ref={inputRef}
           type='file'
-          accept='.csv'
+          accept='.csv,.txt'
           disabled={busy}
           onChange={(e) => pick(e.target.files[0])}
         />
         <span className='drop__name'>
-          {reading ? 'Reading…' : file ? file.name : 'Drop a playlist CSV here'}
+          {reading ? 'Reading…' : file ? file.name : 'Drop a playlist CSV or Rekordbox TXT here'}
         </span>
         <span className='drop__hint'>
           {file ? 'Click to swap' : 'or click to browse'}
         </span>
       </label>
+
+      {allowServerDownloads && <section className='single-download' aria-label='One-off download'>
+        <h2>Download a single track</h2>
+        <p>Paste a YouTube link. Audio saves to <code>{singleFolder || 'downloads/Catch All'}</code> using the format and bitrate selected below.</p>
+        <form onSubmit={(event) => { event.preventDefault(); downloadSingle() }}>
+          <label htmlFor='single-url'>YouTube link</label>
+          <input id='single-url' type='url' required placeholder='https://youtu.be/…'
+            value={singleUrl} onChange={(event) => setSingleUrl(event.target.value)}
+            disabled={singleStarting || single?.status === 'running'} />
+          <button type='submit' disabled={!singleUrl.trim() || singleStarting || single?.status === 'running'}>
+            {singleStarting || single?.status === 'running' ? 'Downloading…' : 'Download track'}
+          </button>
+        </form>
+        {singleError && <p className='error' role='alert'>{singleError}</p>}
+        {single && <p role='status'>
+          {single.title && <strong>{single.title}: </strong>}
+          {single.status === 'done' ? `Saved to ${single.file}` : single.detail}
+          {single.status === 'running' && ` · ${single.percent}%`}
+        </p>}
+        {single?.status === 'done' && <AudioPreview src='/single/audio' label={single.title || 'single download'} />}
+      </section>}
+
+      {allowServerDownloads && <section className='single-download' aria-label='Bandcamp download'>
+        <h2>Bandcamp → YouTube</h2>
+        <p>Paste a Bandcamp track or album URL. RipKit reads its metadata, finds each track on YouTube, and only downloads a YouTube audio stream above 128 kbps. Files save to <code>{bandcampFolder || 'downloads/Catch All/Bandcamp'}</code> as tagged 320 kbps MP3s.</p>
+        <form onSubmit={(event) => { event.preventDefault(); downloadBandcamp() }}>
+          <label htmlFor='bandcamp-url'>Bandcamp track or album link</label>
+          <input id='bandcamp-url' type='url' required placeholder='https://artist.bandcamp.com/album/…'
+            value={bandcampUrl} onChange={(event) => setBandcampUrl(event.target.value)}
+            disabled={bandcampStarting || bandcamp?.status === 'running'} />
+          <button type='submit' disabled={!bandcampUrl.trim() || bandcampStarting || bandcamp?.status === 'running'}>
+            {bandcampStarting || bandcamp?.status === 'running' ? 'Finding & downloading…' : 'Find on YouTube'}
+          </button>
+        </form>
+        {bandcampError && <p className='error' role='alert'>{bandcampError}</p>}
+        {bandcamp && <p role='status'>{bandcamp.detail}</p>}
+      </section>}
 
       {error && <p className='error'>{error}</p>}
 
@@ -530,7 +697,7 @@ export default function App () {
             <fieldset className='pills' disabled={busy}>
               <legend>Where it goes</legend>
               <div className='pills__row'>
-                {DESTINATIONS.map((d) => (
+                {DESTINATIONS.filter((d) => allowServerDownloads || d.value === 'zip').map((d) => (
                   <button
                     key={d.value}
                     type='button'
@@ -576,8 +743,8 @@ export default function App () {
                 {deliver === 'zip' && (
                   <p className='dest__path'>
                     Your browser downloads <code>{zipName}.zip</code>, which unpacks
-                    into a <code>{zipName}</code> folder. The server holds it until you
-                    rip again or start over, so a reload cannot lose it.
+                    into a <code>{zipName}</code> folder. On this hosted instance, the
+                    server removes temporary files automatically after delivery.
                   </p>
                 )}
               </div>
@@ -616,7 +783,7 @@ export default function App () {
                 // the CSV does not — the file input is the browser's to give
                 <button className='go' onClick={rip} disabled={!file}>
                   {!file
-                    ? 'Drop the CSV again to rip'
+                    ? 'Drop the playlist again to rip'
                     : format === 'original'
                       ? 'Rip at source quality'
                       : `Rip to ${format.toUpperCase()}`}
@@ -635,6 +802,7 @@ export default function App () {
           {finished.length > 0 && (
             <Stack
               items={finished}
+              onSource={setSource} onRetry={job ? retryTrack : null} busy={busy}
               shown={shownDone}
               onMore={() => setShownDone((s) => s + PAGE)}
               label='Finished'
@@ -645,6 +813,7 @@ export default function App () {
           {queued.length > 0 && (
             <Stack
               items={queued}
+              onSource={setSource} onRetry={job ? retryTrack : null} busy={busy}
               shown={shownQueue}
               onMore={() => setShownQueue((s) => s + PAGE)}
               label={started ? 'Up next' : null}

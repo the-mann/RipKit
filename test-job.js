@@ -38,6 +38,7 @@ async function main () {
 
   const server = spawn(process.execPath, ['server.js'], {
     env: {
+      ALLOW_SERVER_DOWNLOADS: 'true',
       ...process.env,
       PORT: String(PORT),
       DOWNLOAD_DIR: path.join(DIR, 'downloads'),

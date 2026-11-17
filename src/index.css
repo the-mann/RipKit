@@ -496,6 +496,22 @@ a { color: inherit; }
 
 .track__meta { min-width: 0; text-align: right; }
 
+.preview {
+  grid-column: 3 / 5;
+  display: grid;
+  grid-template-columns: auto 38px minmax(80px, 1fr) 38px;
+  align-items: center;
+  gap: 8px;
+  margin-top: 8px;
+  font-family: var(--mono);
+  font-size: 10px;
+}
+
+.preview__toggle { padding: 5px 8px; font: inherit; }
+.preview__time { opacity: 0.6; text-align: center; }
+.preview__seek { inline-size: 100%; accent-color: currentColor; }
+.single-download .preview { grid-template-columns: auto 38px minmax(80px, 1fr) 38px; margin-top: 12px; }
+
 .track__album,
 .track__detail {
   font-family: var(--mono);
@@ -594,3 +610,18 @@ footer {
   * { transition: none !important; }
   .track { animation: none; }
 }
+
+.track__source { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 10px; align-items: end; }
+.track__source label { display: flex; flex-direction: column; gap: 5px; font-size: 11px; width: min(100%, 340px); }
+.track__source input { width: 100%; box-sizing: border-box; padding: 8px; color: inherit; background: rgb(255 255 255 / 0.05); border: 1px solid rgb(255 255 255 / 0.25); border-radius: 4px; }
+.track__source button, .track__source a { font-size: 11px; padding: 8px; }
+.track__source button:disabled { opacity: 0.4; cursor: default; }
+
+.single-download { margin: 24px 0; padding: 20px; border: 1px solid rgb(255 255 255 / 0.2); border-radius: 8px; }
+.single-download h2 { margin: 0 0 10px; font-size: 20px; }
+.single-download p { font-size: 13px; line-height: 1.6; overflow-wrap: anywhere; }
+.single-download form { display: flex; flex-wrap: wrap; align-items: center; gap: 10px; }
+.single-download label { font-size: 12px; }
+.single-download input { flex: 1; min-width: 180px; padding: 10px; color: inherit; background: rgb(255 255 255 / 0.05); border: 1px solid rgb(255 255 255 / 0.25); border-radius: 4px; }
+.single-download button { padding: 10px 16px; }
+.single-download button:disabled { opacity: 0.5; cursor: default; }

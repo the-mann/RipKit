@@ -1,0 +1,26 @@
+services:
+  ripkit:
+    build: .
+    restart: unless-stopped
+    environment:
+      ALLOW_SERVER_DOWNLOADS: "false"
+      TEMP_FILE_TTL_MS: "1800000"
+      DOWNLOAD_DIR: /data/downloads
+      ZIP_DIR: /data/zips
+      STAGE_DIR: /data/staging
+    volumes:
+      - ripkit_data:/data
+    expose:
+      - "3000"
+
+  # This is the only route into RipKit. Do not add a `ports:` section to the
+  # app: Cloudflare Access authenticates users before this connector reaches it.
+  cloudflared:
+    image: cloudflare/cloudflared:latest
+    restart: unless-stopped
+    command: tunnel --no-autoupdate run --token ${CLOUDFLARE_TUNNEL_TOKEN}
+    depends_on:
+      - ripkit
+
+volumes:
+  ripkit_data:

@@ -15,7 +15,7 @@
     "build": "vite build",
     "server": "node server.js",
     "start": "npm run build && node server.js",
-    "test": "node test-formats.js && node test-job.js"
+    "test": "node test-playlists.js && node test-single.js && node test-overrides.js && node test-bandcamp.js && node test-formats.js && node test-job.js"
   },
   "dependencies": {
     "archiver": "^7.0.1",
