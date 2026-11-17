@@ -14,7 +14,7 @@ async function main () {
   if (!response.ok) throw new Error(`yt-dlp download: ${response.status}`)
   fs.writeFileSync(path.join(dir, 'yt-dlp' + ext), Buffer.from(await response.arrayBuffer()))
   fs.copyFileSync(require('ffmpeg-static'), path.join(dir, 'ffmpeg' + ext))
-  fs.copyFileSync(require('ffprobe-static').path, path.join(dir, 'ffprobe' + ext))
+  fs.copyFileSync(require('@ffprobe-installer/ffprobe').path, path.join(dir, 'ffprobe' + ext))
   // Ship a real Node executable for yt-dlp's JavaScript challenge runtime.
   const version = process.versions.node
   const archive = `node-v${version}-${windows ? 'win' : 'darwin'}-${process.arch}`

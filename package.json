@@ -21,11 +21,11 @@
     "test": "node test-playlists.js && node test-single.js && node test-overrides.js && node test-bandcamp.js && node test-formats.js && node test-job.js"
   },
   "dependencies": {
+    "@ffprobe-installer/ffprobe": "^2.1.2",
     "archiver": "^7.0.1",
     "csv-parser": "^3.2.0",
     "express": "^5.1.0",
     "ffmpeg-static": "^5.3.0",
-    "ffprobe-static": "^3.1.0",
     "multer": "^2.0.2",
     "youtube-dl-exec": "^3.0.27",
     "yt-search": "^2.13.1"
