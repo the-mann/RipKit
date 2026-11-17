@@ -26,6 +26,15 @@ jobs:
       - run: node desktop/prepare.cjs
       - run: npx electron desktop/main.cjs --smoke-test
       - run: npx electron-builder --publish never
+      - name: Test packaged Mac app
+        if: runner.os == 'macOS'
+        run: '"release/mac-arm64/RipKit.app/Contents/MacOS/RipKit" --smoke-test'
+      - name: Test packaged Windows app
+        if: runner.os == 'Windows'
+        shell: pwsh
+        run: |
+          $process = Start-Process -FilePath 'release/win-unpacked/RipKit.exe' -ArgumentList '--smoke-test' -Wait -PassThru
+          if ($process.ExitCode -ne 0) { throw "Desktop smoke test failed: $($process.ExitCode)" }
       - uses: actions/upload-artifact@v4
         with:
           name: RipKit-${{ matrix.os }}
