@@ -252,13 +252,13 @@ export default function App () {
     setSingleStarting(true)
     setSingleError('')
     try {
-      const res = await fetch('/single', {
+      const res = await fetch('/youtube', {
         method: 'POST', headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ sourceUrl: singleUrl, format, quality })
       })
       const data = await res.json()
       if (!res.ok) throw new Error(data.error || 'Could not start download.')
-      setSingle(data.download)
+      window.location.reload()
     } catch (err) { setSingleError(err.message) } finally { setSingleStarting(false) }
   }
   const downloadBandcamp = async () => {
@@ -624,16 +624,16 @@ export default function App () {
         </span>
       </label>
 
-      {allowServerDownloads && <section className='single-download' aria-label='One-off download'>
-        <h2>Download a single track</h2>
-        <p>Paste a YouTube link. Audio saves to <code>{singleFolder || 'downloads/Catch All'}</code> using the format and bitrate selected below.</p>
+      <section className='single-download' aria-label='YouTube download'>
+        <h2>Download from YouTube</h2>
+        <p>Paste a video or playlist link. Get a ZIP of tagged audio with artwork. Up to 100 videos per import; temporary files expire after 30 minutes.</p>
         <form onSubmit={(event) => { event.preventDefault(); downloadSingle() }}>
-          <label htmlFor='single-url'>YouTube link</label>
+          <label htmlFor='single-url'>YouTube video or playlist link</label>
           <input id='single-url' type='url' required placeholder='https://youtu.be/…'
             value={singleUrl} onChange={(event) => setSingleUrl(event.target.value)}
-            disabled={singleStarting || single?.status === 'running'} />
-          <button type='submit' disabled={!singleUrl.trim() || singleStarting || single?.status === 'running'}>
-            {singleStarting || single?.status === 'running' ? 'Downloading…' : 'Download track'}
+            disabled={singleStarting || busy} />
+          <button type='submit' disabled={!singleUrl.trim() || singleStarting || busy}>
+            {singleStarting ? 'Starting…' : 'Download audio'}
           </button>
         </form>
         {singleError && <p className='error' role='alert'>{singleError}</p>}
@@ -643,7 +643,7 @@ export default function App () {
           {single.status === 'running' && ` · ${single.percent}%`}
         </p>}
         {single?.status === 'done' && <AudioPreview src='/single/audio' label={single.title || 'single download'} />}
-      </section>}
+      </section>
 
       {allowServerDownloads && <section className='single-download' aria-label='Bandcamp download'>
         <h2>Bandcamp → YouTube</h2>

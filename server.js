@@ -773,6 +773,50 @@ app.post('/upload', upload.single('csv'), async (req, res) => {
 })
 
 // One-off downloads have their own status and never replace the playlist job.
+app.post('/youtube', async (req, res) => {
+  if (job?.status === 'running') return res.status(409).json({ error: 'A rip is already running.' })
+  let source
+  try {
+    const url = new URL(String(req.body.sourceUrl || '').trim())
+    if (!['https:', 'http:'].includes(url.protocol) || !['youtube.com', 'www.youtube.com', 'music.youtube.com', 'm.youtube.com', 'youtu.be'].includes(url.hostname)) throw new Error()
+    const list = url.searchParams.get('list')
+    source = list && /^[\w-]+$/.test(list)
+      ? `https://www.youtube.com/playlist?list=${list}` : youtubeUrl(url.toString())
+    if (!source) throw new Error()
+  } catch { return res.status(400).json({ error: 'Paste a YouTube video or playlist link.' }) }
+  await clearStage()
+  const id = `${Date.now().toString(36)}${(++jobSeq).toString(36)}`
+  const dest = path.join(STAGE_ROOT, id)
+  fs.mkdirSync(dest, { recursive: true })
+  const current = job = {
+    id, status: 'running', deliver: 'zip', folder: 'YouTube',
+    format: normalizeFormat(req.body.format), quality: normalizeQuality(req.body.quality),
+    dest, stage: dest, total: 0, done: 0, result: null, error: '', cancelled: false, child: null, tracks: []
+  }
+  res.status(202).json({ job: jobSummary() })
+  try {
+    const info = await youtubedl(source, { dumpSingleJson: true, skipDownload: true, ignoreErrors: true, playlistEnd: 100 })
+    if (current.cancelled) { current.status = 'stopped'; scheduleStageCleanup(); return }
+    current.folder = safeName(info.title) || 'YouTube'
+    const songs = (info.entries || [info]).filter(Boolean).map((entry) => ({
+      title: entry.track || entry.title || 'YouTube audio',
+      artist: entry.artist || entry.creator || entry.uploader || 'Unknown artist',
+      album: entry.album || (info.entries ? info.title : '') || '',
+      year: String(entry.release_year || entry.upload_date?.slice(0, 4) || ''),
+      genre: (entry.categories || []).join('; '),
+      art: entry.thumbnail || '',
+      sourceUrl: youtubeUrl(entry.webpage_url || `https://www.youtube.com/watch?v=${entry.id}`)
+    }))
+    current.tracks = songs.map((s) => ({ ...s, status: 'queued', detail: '', percent: 0 }))
+    current.total = songs.length
+    await runRip(current, songs)
+  } catch (err) {
+    current.status = 'failed'
+    current.error = readableError(err)
+    scheduleStageCleanup()
+  }
+})
+
 let singleDownload = null
 app.get('/single', (req, res) => res.json({ download: singleDownload, folder: path.join(DOWNLOAD_ROOT, 'Catch All') }))
 app.post('/single', (req, res) => {
@@ -1053,7 +1097,7 @@ async function runRip (job, songs) {
       // 2) cover art, then 3) metadata + embed
       track.detail = 'tagging'
       track.percent = 95
-      const artUrl = await lookupArt(title, artist)
+      const artUrl = s.art || await lookupArt(title, artist)
       const coverPath = await saveArt(artUrl, tempFolder, fileBase)
 
       try {

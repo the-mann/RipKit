@@ -33,9 +33,10 @@ jobs:
           rsync -az --delete \
             --exclude '.git' \
             --exclude '.github' \
+            --exclude '.env' \
             --exclude 'downloads' \
             --exclude 'output' \
             --exclude '.staging' \
             --exclude 'uploads' \
             ./ ripkit-production:/opt/ripkit/
-          ssh ripkit-production 'cd /opt/ripkit && docker compose up -d --build --remove-orphans'
+          ssh ripkit-production 'cd /opt/ripkit && docker compose up -d --build ripkit'
