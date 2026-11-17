@@ -1,4 +1,5 @@
 import { useEffect, useRef, useState } from 'react'
+import ExportWalkthrough from './ExportWalkthrough'
 
 // Higher bitrates than the source cannot add back what the source never had —
 // they only make the file bigger. VBR lets the encoder track the material; the
@@ -613,6 +614,7 @@ export default function App () {
             <li>Save the TXT file somewhere easy to find, then drag it into RipKit below.</li>
           </ol>
           <p className='export-note'>You can also select the playlist and use the Playlist menu at the top. Choose TXT, rather than M3U8 or USB export. This exports a track list; it does not transfer cue points or audio. Playlist CSV files work too.</p>
+          <ExportWalkthrough />
         </section>
       )}
 

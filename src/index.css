@@ -634,3 +634,24 @@ footer {
 }
 .export-guide li { padding-left: .35rem; margin-bottom: .65rem; }
 .export-note { max-width: 48rem; font-size: .85rem; line-height: 1.6; opacity: .75; }
+.export-demo { margin: 24px 0; max-width: 760px; }
+.export-demo__screen { position: relative; aspect-ratio: 3104 / 1974; overflow: hidden; border: 1px solid #ffffff40; border-radius: 12px; background: #080808; }
+.export-demo__screen img { display: block; width: 100%; }
+.export-demo__focus { position: absolute; left: 6%; top: 61.5%; width: 15.5%; height: 2.5%; border: 2px solid #ffd66b; border-radius: 3px; box-shadow: 0 0 0 2000px #0003; }
+.export-demo__cursor { position: absolute; left: 18%; top: 62%; color: white; font-size: 22px; text-shadow: 1px 1px 2px black; transition: left .7s, top .7s; z-index: 2; }
+.step-1 .export-demo__cursor { left: 34%; top: 59%; }
+.step-2 .export-demo__cursor { left: 58%; top: 64%; }
+.step-3 .export-demo__cursor { left: 48%; top: 79%; }
+.export-demo__menu { position: absolute; left: 20%; top: 56%; width: 37%; padding: 8px; background: #303034; border: 1px solid #666; border-radius: 6px; color: white; font-size: clamp(9px, 1.4vw, 14px); text-align: left; box-shadow: 0 6px 25px #0009; }
+.export-demo__menu > div:first-child { background: #176cdb; padding: 8px; border-radius: 3px; }
+.export-demo__menu span { float: right; }
+.export-demo__submenu { margin: 6px -20% -4px 20%; padding: 10px; border: 1px solid #69a8ff; border-radius: 4px; background: #176cdb; }
+.export-demo__file { position: absolute; left: 30%; top: 73%; padding: 14px 22px; background: var(--bone); color: var(--ink); border-radius: 8px; box-shadow: 0 5px 30px #0009; }
+.export-demo__file span { display: block; font-size: 12px; margin-top: 6px; }
+.export-demo__play { position: absolute; inset: 0; margin: auto; width: fit-content; height: fit-content; padding: 14px 20px; border-radius: 30px; border: 1px solid #fff9; background: #20124de8; color: white; cursor: pointer; font: inherit; box-shadow: 0 4px 25px #0009; }
+.export-demo figcaption { display: flex; align-items: center; justify-content: space-between; gap: 12px; margin-top: 12px; font-size: 14px; line-height: 1.5; }
+.export-demo figcaption button, .export-demo__steps button { border: 1px solid #ffffff70; border-radius: 6px; background: transparent; color: inherit; padding: 6px 12px; cursor: pointer; }
+.export-demo__steps { display: flex; gap: 8px; margin: 12px 0; }
+.export-demo__steps button[aria-pressed='true'] { background: var(--bone); color: var(--field-deep); }
+.export-demo small { opacity: .65; font-size: 11px; line-height: 1.5; display: block; }
+@media (prefers-reduced-motion: reduce) { .export-demo__cursor { transition: none; } }
