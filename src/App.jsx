@@ -341,6 +341,11 @@ export default function App () {
         setJob(data.job)
         if (data.job.status !== 'running') setStopping(false)
       }
+      if (data.total > tracks.length) {
+        const full = await (await fetch('/job')).json()
+        setTracks(full.tracks || [])
+        return
+      }
 
       const moved = Object.entries(data.tracks || {})
       if (!moved.length) return
